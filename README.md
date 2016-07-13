@@ -3,6 +3,32 @@ a android library to make common function easy
 
 使用方法
 -----
+通用ListView adapter
+```java
+SimpleArrayAdapter adapter = new SimpleArrayAdapter.Builder(this)
+                .itemLayoutId(R.layout.list_item)
+                .from("name", "age")
+                .to(R.id.name, R.id.age, R.id.button)
+                .setListData(list)
+                .setmChildViewClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        switch (v.getId()) {
+                            case R.id.button:
+                                User user = (User) v.getTag();
+                                Toast.makeText(ListActivity.this, "Button click " + user.name, Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                    }
+                })
+                .setmViewBinder(new SimpleAdapter.ViewBinder() {
+                    @Override
+                    public boolean setViewValue(View view, Object data, String textRepresentation) {
+                        return false;
+                    }
+                })
+                .build();
+          ```
 
 
 设置  
