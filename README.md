@@ -28,8 +28,7 @@ SimpleArrayAdapter adapter = new SimpleArrayAdapter.Builder(this)
                     }
                 })
                 .build();
-          ```
-
+```
 
 设置  
 -----
