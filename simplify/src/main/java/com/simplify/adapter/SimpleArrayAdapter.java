@@ -1,6 +1,8 @@
 package com.simplify.adapter;
 
 import android.content.Context;
+import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -10,10 +12,12 @@ import android.widget.ImageView;
 import android.widget.SimpleAdapter.ViewBinder;
 import android.widget.TextView;
 
-import com.simplify.util.ImageLoader;
+import com.simplify.util.ImageHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -21,14 +25,14 @@ import java.util.List;
  * 类描述： 封装的通用数据源适配器
  * 创建人：shujian
  */
-public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implements OnClickListener {
+public class SimpleArrayAdapter extends BaseAdapter implements OnClickListener {
 
 
-    private List<T> mData;
+    private List mData;
 
     private int mResource;
 
-    private Context mContext;
+//    private Context mContext;
 
     private LayoutInflater mInflater;
 
@@ -37,10 +41,10 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
     private ViewBinder mViewBinder;
     private OnClickListener mChildViewClickListener;
 
-    private ImageLoader imageLoader;
+    private ImageHandler imageHandler;
 
-    public SimpleArrayAdapter<T> setImageLoader(ImageLoader imageLoader) {
-        this.imageLoader = imageLoader;
+    public SimpleArrayAdapter setImageHandler(ImageHandler imageHandler) {
+        this.imageHandler = imageHandler;
         return this;
     }
 
@@ -59,38 +63,27 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
      *                 TextViews. The first N views in this list are given the values of the first N columns
      *                 in the from parameter.
      */
-    public SimpleArrayAdapter(Context context, List<T> data,
-                              int resource, String[] from, int[] to, ViewGroup parentV) {
-        mData = data == null ? new ArrayList<T>() : data;
+    public SimpleArrayAdapter(Context context, List<?> data, int resource, String[] from, int[] to) {
+        mData = data == null ? new ArrayList<>() : data;
         mResource = resource;
         mFrom = from;
         mTo = to;
-        mContext = context;
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
-    /**
-     * TEST TODO
-     *
-     * @param context
-     * @param resource
-     * @param from
-     * @param to
-     * @param parentV
-     */
-    public SimpleArrayAdapter(Context context,
-                              int resource, String[] from, int[] to, ViewGroup parentV) {
-        List data = new ArrayList();
-        for (int i = 0; i < 10; i++) {
-            BaseBean baseBean = new BaseBean();
-            data.add(baseBean);
-        }
-        mData = data;
-        mResource = resource;
-        mFrom = from;
-        mTo = to;
-        mContext = context;
-        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    public SimpleArrayAdapter(Builder builder) {
+        mData = builder.mData == null? new ArrayList<>():builder.mData;
+        mResource = builder.mResource;
+        mFrom = builder.mFrom;
+        mTo = builder.mTo;
+        mInflater = (LayoutInflater) builder.mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        mViewBinder = builder.mViewBinder;
+        mChildViewClickListener = builder.mChildViewClickListener;
+    }
+
+    public SimpleArrayAdapter(Context context, int resource, String[] from, int[] to) {
+        this(context, null, resource, from, to);
     }
 
     /**
@@ -103,11 +96,11 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
     }
 
 
-    public void setData(List<T> mData) {
+    public void setData(List<?> mData) {
         this.mData = mData;
     }
 
-    public List<T> getData() {
+    public List<?> getData() {
         return mData;
     }
 
@@ -115,7 +108,7 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
      * {@inheritDoc}
      */
     @Override
-    public T getItem(int position) {
+    public Object getItem(int position) {
         // TODO Auto-generated method stub
         return mData.get(position);
     }
@@ -150,6 +143,10 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
         for (int i = 0; i < mTo.length; i++) {
             View childV = v.findViewById(mTo[i]);
             if (childV.isClickable()) {
+
+                childV.setFocusable(false);
+                childV.setFocusableInTouchMode(false);
+
                 childV.setOnClickListener(this);
             }
             viewHandler.add(v.findViewById(mTo[i]));
@@ -163,7 +160,7 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
         final int count = mTo.length;
         final String[] from = mFrom;
         List<View> vHandler = (List<View>) view.getTag();
-        T t = mData.get(position);
+        Object t = mData.get(position);
         for (int i = 0; i < count; i++) {
             View v = vHandler.get(i);
             //为可点击view 设置数据
@@ -178,7 +175,7 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
             }
 
             if (!bound) {
-                Object object = t.get(from[i]);
+                Object object = RetrieveHandler.getValueFromKey(from[i], t);
                 String text = "";
                 if (object != null) {
                     text = object.toString();
@@ -229,7 +226,7 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
      * Called by bindView() to set the text for a TextView but only if
      * there is no existing ViewBinder or if the existing ViewBinder cannot
      * handle binding to an TextView.
-     *
+     * <p/>
      * Intended to be overridden by Adapters that need to filter strings
      * retrieved from the database.
      *
@@ -245,10 +242,10 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
      * there is no existing ViewBinder or if the existing ViewBinder cannot
      * handle binding to an ImageView.
      * By default, the value will be treated as an image resource. If the
-     *
+     * <p/>
      * value cannot be used as an image resource, the value is used as an
      * image Uri.
-     *
+     * <p/>
      * Intended to be overridden by Adapters that need to filter strings
      * retrieved from the database.
      *
@@ -259,7 +256,7 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
         try {
             v.setImageResource(Integer.parseInt(value));
         } catch (NumberFormatException nfe) {
-            imageLoader.loadImage(value, v);
+            imageHandler.loadImage(value, v);
         }
     }
 
@@ -269,6 +266,79 @@ public class SimpleArrayAdapter<T extends BaseBean> extends BaseAdapter implemen
         if (mChildViewClickListener != null) {
             mChildViewClickListener.onClick(v);
         }
+    }
+
+
+    public static final class Builder {
+
+        List mData;
+
+        int mResource;
+
+        Context mContext;
+
+        int[] mTo;
+        String[] mFrom;
+
+
+        ViewBinder mViewBinder;
+        OnClickListener mChildViewClickListener;
+
+
+        private ImageHandler imageHandler;
+
+        public Builder(Context mContext) {
+            this.mContext = mContext;
+        }
+
+        public Builder setListData(List mData) {
+            this.mData = mData;
+            return this;
+        }
+
+        public Builder setMapData(Map<?,?> mData) {
+            ArrayList<Object> list = new ArrayList<>();
+            for (Map.Entry<?,?> entry : mData.entrySet()) {
+                HashMap<Object, Object> m = new HashMap<>();
+                m.put("key", entry.getKey());
+                m.put("value",entry.getValue());
+                list.add(m);
+            }
+            this.mData = list;
+            return this;
+        }
+
+
+        public Builder setmChildViewClickListener(OnClickListener mChildViewClickListener) {
+            this.mChildViewClickListener = mChildViewClickListener;
+            return this;
+        }
+
+        public Builder setmViewBinder(ViewBinder mViewBinder) {
+            this.mViewBinder = mViewBinder;
+            return this;
+        }
+
+        public Builder itemLayoutId(@LayoutRes int itemLayoutResourceId) {
+            this.mResource = itemLayoutResourceId;
+            return this;
+        }
+
+        public Builder from(String... from) {
+            this.mFrom = from;
+            return this;
+        }
+
+        public Builder to(@IdRes int... to) {
+            this.mTo = to;
+            return this;
+        }
+
+        public SimpleArrayAdapter build() {
+            return new SimpleArrayAdapter(this);
+        }
+
+
     }
 
 }

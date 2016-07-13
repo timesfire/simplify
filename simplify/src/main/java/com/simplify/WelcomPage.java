@@ -24,8 +24,6 @@ public class WelcomPage {
 
     private ViewPager viewPager;
 
-    OnDismissListener onDismissListener;
-
     ViewPager.OnPageChangeListener onPageChangeListener;
 
 
@@ -38,7 +36,7 @@ public class WelcomPage {
         WindowManager.LayoutParams winParams = win.getAttributes();
         final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
         if (on) {
-            winParams.flags |=  bits;
+            winParams.flags |= bits;
         } else {
             winParams.flags &= ~bits;
         }
@@ -56,8 +54,6 @@ public class WelcomPage {
      * @param resIds
      */
     public void show(@Nullable final OnDismissListener listener, @DrawableRes int... resIds) {
-
-        setTranslucentStatus(true);
 
         viewPager = new ViewPager(activity);
         viewPager.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -81,7 +77,6 @@ public class WelcomPage {
                     @Override
                     public void onClick(View v) {
                         ((ViewGroup) activity.getWindow().getDecorView()).removeView(viewPager);
-//                        ((ViewGroup) activity.getWindow().getDecorView()).getChildAt(1).setFitsSystemWindows(true);
                         if (listener != null) {
                             listener.onDismiss();
                         }
