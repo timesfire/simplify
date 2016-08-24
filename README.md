@@ -35,7 +35,7 @@ SimpleArrayAdapter adapter = new SimpleArrayAdapter.Builder(this)
 将下载的jar包放到工程中，或者在build.gradle中配置依赖
 ```groovy
 dependencies {      
-	compile 'com.github.timesfire:0.1.1'
+	compile 'com.github.timesfire:simplify:0.1.1'
 }
 ```
 
